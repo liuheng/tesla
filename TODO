@@ -1,0 +1,40 @@
+/// Level 0
+
+1.完成Reactor模型相关类的开发 (done)
+2.搞清楚base部分的具体细节
+3.搞清楚reactor的具体细节
+4.跑通echo程序 (done)
+5.现在的状况是，精简的单线程reactor已经跑通，测试用例已添加，细节还需整理，base和net也已经跑通，测试用例未添加，需要在上面整理自己的，能用于生产环节的网络库，改写/重写代码并添加新功能，这个状况打一个rc1 tag (done)
+
+/// Level 1
+
+1.把整个base和netcore部分串起来，整理成设计和交互文档
+2.按自己的意思重写/改写代码
+3.对http、protobuf提供直接和完备的支持
+
+/// Level 2
+
+1.增加安全性支持
+2.增加UDP支持
+3.连接服务器放到公网，然后用tesla来处理网络连接后的业务处理工作
+4.tesla的定位是一个内网公网都可以的系统，至少在功能和性能上都行得通，安全问题后续再考虑
+5.除了关联性非常大，本身却体积小变化不多的类之外，其他的相关类最好也放到不同的文件 (done)
+6.将signal融入EventLoop处理，通过signalfd
+7.留出wrapper和扩展的余地，比如recursive-mutex
+
+/// Protobuf
+
+复杂结构
+动态编译
+动态解析，使用importer, message, field；类似xml解析
+varint
+MessageBuffer：二进制Key-value pair，二进制JSON
+sint32，zigzag编码
+class Person{
+    email{
+      has_()
+      clear_()
+      set_()
+    }
+}
+

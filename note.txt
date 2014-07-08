@@ -1,0 +1,112 @@
+1.eventloop threads 是为应对高并发访问量
+worker threads是为应对大计算量
+reactor的核心是平衡I/O和cpu，综合考虑响应延时，业务类型，系统负载等因素，因此具体evthreads和worker threads的数目要根据具体系统来调优
+
+2.一个典型的网络请求流程
+[Connection establish]
+Read request
+Decode request
+Process service
+Encode reply
+Send reply
+[Connection close]
+但是不同的业务类型，其每个步骤的系统资源占用和交互逻辑，是不同的。
+
+3.大型分布式系统要考虑的基本设计问题
+高性能、高可用性、可伸缩性、易扩展性、安全性
+对于服务器端网络库而言，注意一下几点：
+① 如何应对瞬时高并发，如何平稳退化
+② 如何协调cpu、i/o、内存、磁盘、带宽等资源
+③ 扩充了资源，系统的整体能力如何提高
+④ 如何应对不同类型的具体业务
+⑤ 网络服务：低延时、高质量和错峰
+
+4.Divide-and-conquer is usually the best 
+approach for achieving any scalability goal
+这不是我说的，大师（Doug Lea）说的
+① Divide processing into small tasks
+Each task performs an action without blocking
+② Execute each task when it is enabled
+Here, an IO event usually serves as trigger
+
+5.重要设计决策
+- reactor（不考虑proactor和fake proactor）
+- 提供event loops(one loop per thread) + taskqueue +　workerpool的默认工作模式
+- 短小精悍（足够小也是设计目标），高效率
+- 仅对http和protobuf提供直接扩展支持
+- 线程安全，如果有trick，要做好安全预防工作
+- 不跨平台，针对现代x86-64 linux做优化
+- lib方式提供
+- 用户可见类统一以以下命名空间导出
+  核心：tesla::base, tesla::net
+  扩展：tesla::net::http, tesla::net::protobuf
+- 非用户可见类必须使用不同的命名空间，如
+  tesla::net::backend
+  tesla::net::sockets
+  tesla::net::details
+  ...
+- 所有的头文件（公共、私有）都只能引入tesla::base和tesla::net命名空间，而且是内部引入，base不能反向依赖net，内部命名空间一律不可引入
+- 接口的提供方式，可选有很多种，可以面向对象，可以接口化，可以面向对象+泛型方式，也可以基于对象（+function、+bind），本网络库受muduo影响，采用基于对象的方式提供，这样的api最易用、也最易理解
+- 命名约定
+  class MyClass;
+  void MyClass:setSomeAttr();
+  int member_;
+  
+- 需要支持udp和ipv6
+- 对boost的态度：出于性能、可控性、体积、依赖、自己动手等因素，不使用绝大多数boost库，并且使用tr1中的新特性来代替boost依赖（function、bind、smart_ptr、&&、move...），对于不满足编译条件的系统，采取退让策略使用boost，但不采用稍微体积/负载过大的boost库，如datetime（自己实现），人畜无害，tr1又没有的boost组件自己来实现，如noncopyable、operators（减少依赖），重要的boost组件，使用boost并备案（circular_buffer）
+- 抽象（可见|*不可见）
+  <tesla::base>
+  工具：
+    implicit_cast<>、down_cast<>（Types.h）
+    StringArg、StringPiece（StringPiece.hpp）
+    class WeakCallback<>（WeakCallback.hpp）
+    class AtomicType<>（Atomic.hpp）
+    class Copyable（Copyable.hpp）
+    class Noncopyable（Noncopyable.hpp）
+    class Date（Date.h、Date.cc）
+    class Timestamp（Timestamp.h、Timestamp.cc）
+    class Exception（Exception.h、Exception.cc）
+    class Timezone（Timezone.h、Timezone.cc）
+    class Singleton<>（Singleton.hpp）
+    class CountdownLatch （CountdownLatch.h、CountdownLatch.cc）
+    class ProcessInfo（ProcessInfo.h、ProcessInfo.cc）
+    class MutexLock、class MutexLockGuard（Mutex.hpp）
+    class Condition（Condition.h、COndition.cc）
+    class Thread（Thread.h、Thread.cc）
+    class ThreadLocal（ThreadLocal.hpp）
+    class ThreadLocalSingleton（ThreadLocalSingleton.hpp）
+    class ThreadPool（Threadpool.h、Threadpool.cc）
+    class BlockingQueue（BlockingQueue.hpp）
+    class BoundedBlockingQueue（BoundedBlockingQueue.hpp）
+    class FixedBuffer、class LogStream、class Fmt（LogStream.h、LogStream.cc）
+    class Logger（Logger.h、Logger.cc）
+    class FileLogger（FileLogger.h、FileLogger.cc）
+    class SmallFileReader、class FileAppender（FileUtils.h、FileUtils.cc）
+    class FileLogger（FileLogger.h、FileLogger.cc）
+    class AsyncLogger（AsyncLogger.h、AsyncLogger.cc）
+    class GzipFile（GzipFile.hpp）
+  <tesla::net>
+
+- 加强测试用例的编写
+- events与channel绑定，channel是buffer的channel，buffer是channel的buffer
+- channel与buffer类似stream与bytes
+- channel属于抽象概念，其他Acceptor、Connector、TcpConnection、Buffer、Socket、Backend、EventLoop等是实体封装
+- channels与eventloops是reactor的核心
+- nio中的ServerSocketChannel即Acceptor
+- nio中的各种Buffer，三个基本参数：capacity、position、limit，针对读写各有不同
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
