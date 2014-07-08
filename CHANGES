@@ -1,0 +1,8 @@
+Changelog
+===============================================
+
+Version 0.0.1
+-----------------------------------------------
+1.copy liuheng/tesla to MeroCloud/tesla
+2.add .gitignore, ignore c++ intermediate files
+3.change LICENCE from Apache v2 to MIT
