@@ -1,4 +1,10 @@
-tesla
-=====
+```
+##### ######  ####  #        ##
+  #   #      #      #       #  #
+  #   #####   ####  #      #    #
+  #   #           # #      ######
+  #   #      #    # #      #    #
+  #   ######  ####  ###### #    #
 
-a modern c++ network library
+Building on shoulders of giants.
+```
